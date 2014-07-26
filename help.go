@@ -38,10 +38,10 @@ var CommandHelpTemplate = `NAME:
    {{.Name}} - {{.Usage}}
 
 USAGE:
-   command {{.Name}}{{ if .Flags }} [command options]{{ end }} [arguments...]
+   command {{.Name}}{{ if .Flags }} [command options]{{ end }} [arguments...]{{if .Description}}
 
 DESCRIPTION:
-   {{.Description}}{{ if .Flags }}
+   {{.Description}}{{end}}{{ if .Flags }}
 
 OPTIONS:
    {{range .Flags}}{{.}}
