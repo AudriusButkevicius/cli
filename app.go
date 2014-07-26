@@ -64,8 +64,6 @@ func NewApp() *App {
 		BashComplete: DefaultAppComplete,
 		Action:       helpCommand.Action,
 		Compiled:     compileTime(),
-		Author:       "Author",
-		Email:        "unknown@email",
 	}
 }
 
