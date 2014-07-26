@@ -121,18 +121,25 @@ func (c *Context) Args() Args {
 }
 
 // Returns an error if the context arguments do not satisfy the given requirements
-func (c *Context) Satisfies(req *Requires) error {
+func (c *Context) Satisfies(req *Requires, argline string) error {
 	if req != nil {
 		argc := len(c.Args())
+		err := ""
 		if req.Atleast > 0 || req.NoMoreThan > 0 {
 			if req.Atleast > argc {
-				return fmtRequiresError("atleast", req.Atleast)
+				err = fmtRequiresError("atleast", req.Atleast)
 			} else if req.NoMoreThan > 0 && argc > req.NoMoreThan {
-				return fmtRequiresError("no more than", req.NoMoreThan)
+				err = fmtRequiresError("no more than", req.NoMoreThan)
 			}
 		} else if argc != req.Exactly {
-			return fmtRequiresError("exactly", req.Exactly)
+			err = fmtRequiresError("exactly", req.Exactly)
+		} else {
+			return nil
 		}
+		if argline != "" {
+			err += "\n" + argline
+		}
+		return fmt.Errorf(err)
 	}
 	return nil
 }
@@ -174,14 +181,14 @@ func (a Args) Swap(from, to int) error {
 }
 
 // Formats the requirement error
-func fmtRequiresError(str string, count int) error {
+func fmtRequiresError(str string, count int) string {
 	switch count {
 	case 0:
-		return fmt.Errorf("Command requires no arguments")
+		return "Command requires no arguments"
 	case 1:
-		return fmt.Errorf("Command requires %s 1 argument", str)
+		return fmt.Sprintf("Command requires %s 1 argument", str)
 	}
-	return fmt.Errorf("Command requires %s %d arguments", str, count)
+	return fmt.Sprintf("Command requires %s %d arguments", str, count)
 }
 
 func lookupInt(name string, set *flag.FlagSet) int {
