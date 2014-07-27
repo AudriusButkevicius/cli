@@ -33,8 +33,6 @@ type Command struct {
 	HideHelp bool
 	// Command argument requirements
 	Requires *Requires
-	// Argument description
-	ArgumentLine string
 }
 
 // Invokes the command given the context, parses ctx.Args() to generate command-specific flags
@@ -102,7 +100,7 @@ func (c Command) Run(ctx *Context) error {
 		return nil
 	}
 
-	if err := context.Satisfies(c.Requires, c.ArgumentLine); err != nil {
+	if err := context.Satisfies(c.Requires); err != nil {
 		return err
 	}
 

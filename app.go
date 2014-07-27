@@ -41,8 +41,6 @@ type App struct {
 	Email string
 	// Command argument requirements
 	Requires *Requires
-	// Argument description
-	ArgumentLine string
 }
 
 // Tries to find out when this binary was compiled.
@@ -114,7 +112,7 @@ func (a *App) Run(arguments []string) error {
 		return nil
 	}
 
-	if err := context.Satisfies(a.Requires, a.ArgumentLine); err != nil {
+	if err := context.Satisfies(a.Requires); err != nil {
 		return err
 	}
 
@@ -200,7 +198,7 @@ func (a *App) RunAsSubcommand(ctx *Context) error {
 		}
 	}
 
-	if err := context.Satisfies(a.Requires, a.ArgumentLine); err != nil {
+	if err := context.Satisfies(a.Requires); err != nil {
 		return err
 	}
 

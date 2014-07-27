@@ -20,11 +20,7 @@ type Context struct {
 	setFlags  map[string]bool
 }
 
-type Requires struct {
-	Atleast    int
-	Exactly    int
-	NoMoreThan int
-}
+type Requires []string
 
 // Creates a new context. For use in when invoking an App or Command action.
 func NewContext(app *App, set *flag.FlagSet, globalSet *flag.FlagSet) *Context {
@@ -121,25 +117,52 @@ func (c *Context) Args() Args {
 }
 
 // Returns an error if the context arguments do not satisfy the given requirements
-func (c *Context) Satisfies(req *Requires, argline string) error {
+func (c *Context) Satisfies(req *Requires) error {
 	if req != nil {
+		optional := 0
+		unlimited := false
+		clean_args := []string{}
+		for _, arg := range *req {
+			if strings.Contains(arg, "...") {
+				unlimited = true
+				arg = strings.Replace(arg, "...", "", -1) + "..."
+			}
+			if strings.Contains(arg, "?") {
+				optional++
+				arg = "[" + strings.Replace(arg, "?", "", -1) + "]"
+			} else {
+				arg = "<" + arg + ">"
+			}
+			clean_args = append(clean_args, arg)
+		}
+		exactly, nomore, atleast := 0, 0, 0
+		if optional == 0 && !unlimited {
+			exactly = len(*req)
+		} else {
+			atleast = len(*req) - optional
+			if !unlimited {
+				nomore = len(*req)
+			}
+		}
+
 		argc := len(c.Args())
 		err := ""
-		if req.Atleast > 0 || req.NoMoreThan > 0 {
-			if req.Atleast > argc {
-				err = fmtRequiresError("atleast", req.Atleast)
-			} else if req.NoMoreThan > 0 && argc > req.NoMoreThan {
-				err = fmtRequiresError("no more than", req.NoMoreThan)
+
+		if atleast > 0 || nomore > 0 {
+			if atleast > argc {
+				err = fmtRequiresError("atleast", atleast)
+			} else if nomore > 0 && argc > nomore {
+				err = fmtRequiresError("no more than", nomore)
 			}
-		} else if argc != req.Exactly {
-			err = fmtRequiresError("exactly", req.Exactly)
-		} else {
-			return nil
+		} else if argc != exactly {
+			err = fmtRequiresError("exactly", exactly)
 		}
-		if argline != "" {
-			err += "\n" + argline
+		if err != "" {
+			if len(clean_args) > 0 {
+				err += ": " + strings.Join(clean_args, " ")
+			}
+			return fmt.Errorf(err)
 		}
-		return fmt.Errorf(err)
 	}
 	return nil
 }
